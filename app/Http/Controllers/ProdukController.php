@@ -119,7 +119,7 @@ class ProdukController extends Controller
                 'id_kategori' => $request->id_kategori
             ]);
 
-            $product->stok->create([
+            $product->stok()->create([
                 'stok' => $request->stok,
                 'tgl_penerimaan' => $request->tgl_penerimaan,
                 'tgl_kadaluwarsa' => $request->tgl_kadaluwarsa
@@ -277,3 +277,5 @@ class ProdukController extends Controller
         }
 }
 }
+
+
