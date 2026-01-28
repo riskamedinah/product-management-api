@@ -20,23 +20,20 @@ class ProdukController extends Controller
             });
         }
 
-
         if ($request->has('status')) {
             $query->where('status', $request->status);
         }
 
- 
         if ($request->has('stok_min') || $request->has('stok_max')) {
             $query->whereHas('stok', function ($q) use ($request) {
                 if ($request->has('stok_min')) {
                     $q->where('stok', '>=', $request->stok_min);
                 }
-                 if ($request->has('stok_max')) {
+                if ($request->has('stok_max')) {
                     $q->where('stok', '<=', $request->stok_max);
                 }
             });
         }
-
 
         if ($request->has('harga_min')) {
             $query->where('harga', '>=', $request->harga_min);
@@ -49,31 +46,53 @@ class ProdukController extends Controller
             $tahunBulan = explode('-', $request->penerimaan);
             if (count($tahunBulan) == 2) {
                 $query->whereHas('stok', function ($q) use ($tahunBulan) {
-                    $q->whereYear('tgl_penerimaan', $tahunBulan[0])->whereMonth('tgl_penerimaan', $tahunBulan[1]);
+                    $q->whereYear('tgl_penerimaan', $tahunBulan[0])
+                    ->whereMonth('tgl_penerimaan', $tahunBulan[1]);
                 });
             }
         }
 
-
-         if ($request->has('kadaluwarsa')) {
+        if ($request->has('kadaluwarsa')) {
             $tahunBulan = explode('-', $request->kadaluwarsa);
             if (count($tahunBulan) == 2) {
                 $query->whereHas('stok', function ($q) use ($tahunBulan) {
-                    $q->whereYear('tgl_kadaluwarsa', $tahunBulan[0])->whereMonth('tgl_kadaluwarsa', $tahunBulan[1]);
+                    $q->whereYear('tgl_kadaluwarsa', $tahunBulan[0])
+                    ->whereMonth('tgl_kadaluwarsa', $tahunBulan[1]);
                 });
             }
         }
-
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', '%' . $search . '%')->orWhere('id_produk', 'like', '%' . $search . '%');
+                $q->where('nama_produk', 'like', '%' . $search . '%')
+                ->orWhere('id_produk', 'like', '%' . $search . '%');
             });
         }
 
-        
-        $query->orderBy('id_produk');
+        $sort = $request->get('sort', 'id_produk');
+        $order = $request->get('order', 'asc');
+
+        if ($sort === 'stok') {
+            $query->leftJoin('stok', 'produk.id_produk', '=', 'stok.id_produk')
+                ->select('produk.*')
+                ->orderBy('stok.stok', $order);
+        } elseif ($sort === 'tgl_penerimaan') {
+            $query->leftJoin('stok', 'produk.id_produk', '=', 'stok.id_produk')
+                ->select('produk.*')
+                ->orderBy('stok.tgl_penerimaan', $order);
+        } elseif ($sort === 'nama_kategori') {
+            $query->leftJoin('kategori', 'produk.id_kategori', '=', 'kategori.id_kategori')
+                ->select('produk.*')
+                ->orderBy('kategori.nama_kategori', $order);
+        } else {
+            $validSortFields = ['id_produk', 'nama_produk', 'harga', 'status'];
+            if (in_array($sort, $validSortFields)) {
+                $query->orderBy($sort, $order);
+            } else {
+                $query->orderBy('id_produk', 'asc');
+            }
+        }
 
         $products = $query->paginate(10);
 
@@ -156,12 +175,12 @@ class ProdukController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Produk tidak ditemukan'
-            ], 400);
+            ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Detail produk berhaisl diambil',
+            'message' => 'Detail produk berhasil diambil',
             'data' => $product
         ]);
     }
@@ -208,7 +227,7 @@ class ProdukController extends Controller
             'id_kategori' => $request->id_kategori ?? $product->id_kategori
         ]);
 
-        if ($request->has('stok') || $request->has('tgl_penerimaan') || $request->has('tgl_kadaluwwarsa')) 
+        if ($request->has('stok') || $request->has('tgl_penerimaan') || $request->has('tgl_kadaluwarsa')) 
             {
             $stokData =[];
             if ($request->has('stok')) $stokData['stok'] = $request->stok;
@@ -234,7 +253,7 @@ class ProdukController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memperbarui produk',
+                'message' => 'Gagal menghapus produk',
                 'error' => $e->getMessage()
             ], 500);
         }
