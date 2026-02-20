@@ -10,3 +10,5 @@ Route::prefix('products')->group(function () {
     Route::put('/{id}', [ProdukController::class, 'update']);
     Route::delete('/{id}', [ProdukController::class, 'destroy']);
 });
+
+Route::get('/categories', [ProdukController::class, 'getCategories']);
