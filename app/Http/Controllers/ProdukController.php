@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produk;
+use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -11,17 +12,177 @@ use Illuminate\Support\Str;
 class ProdukController extends Controller
 {
      // GET /categories
-        public function getCategories()
-    {
-        $categories = \App\Models\Kategori::select('id_kategori', 'nama_kategori')
-            ->orderBy('nama_kategori', 'asc')
-            ->get();
+       public function getCategories(Request $request)
+{
+    try {
+        $query = Kategori::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_kategori', 'like', '%' . $search . '%')
+                  ->orWhere('id_kategori', 'like', '%' . $search . '%');
+            });
+        }
+
+        $sort = $request->get('sort', 'id_kategori');
+        $direction = $request->get('direction', 'asc');
+        $validSortFields = ['id_kategori', 'nama_kategori'];
+        $field = in_array($sort, $validSortFields) ? $sort : 'id_kategori';
         
+        $query->orderBy($field, $direction);
+
+        $categories = $query->paginate(10);
+
         return response()->json([
             'success' => true,
-            'data' => $categories
+            'data' => $categories->items(),
+            'meta' => [
+                'current_page' => $categories->currentPage(),
+                'last_page' => $categories->lastPage(),
+                'total' => $categories->total(),
+            ]
         ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mengambil data kategori',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
+    // GET /categories/{id}
+public function getCategory($id)
+{
+    $category = Kategori::find($id);
+    if (!$category) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kategori tidak ditemukan'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $category
+    ]);
+}
+
+ // POST /categories
+public function storeCategory(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'nama_kategori' => 'required|string|max:50|unique:kategori,nama_kategori',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+    }
+    try {
+        $lastCategory = Kategori::orderBy('id_kategori', 'desc')->first();
+        $nextIdNumber = 1;
+        if ($lastCategory) {
+            $lastIdNumber = (int) substr($lastCategory->id_kategori, 1);
+            $nextIdNumber = $lastIdNumber + 1;
+        }
+        $newId = 'K' . str_pad($nextIdNumber, 2, '0', STR_PAD_LEFT);
+
+        $category = new Kategori;
+        $category->id_kategori = $newId;
+        $category->nama_kategori = $request->nama_kategori;
+        $category->timestamps = false; // Nonaktifkan timestamps untuk operasi ini
+        $category->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori berhasil ditambahkan',
+            'data' => $category
+        ], 201);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menambah kategori',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+ // PUT /categories/{id}
+public function updateCategory(Request $request, $id)
+{
+    $category = Kategori::find($id);
+    if (!$category) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kategori tidak ditemukan'
+        ], 404);
+    }
+
+    $validator = Validator::make($request->all(), [
+        'nama_kategori' => 'required|string|max:50|unique:kategori,nama_kategori,' . $id . ',id_kategori'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    try {
+        $category->nama_kategori = $request->nama_kategori;
+        $category->timestamps = false; // Nonaktifkan timestamps untuk operasi ini
+        $category->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori berhasil diperbarui',
+            'data' => $category
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui kategori',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+// DELETE /categories/{id}
+public function destroyCategory($id)
+{
+    $category = Kategori::find($id);
+    if (!$category) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kategori tidak ditemukan'
+        ], 404);
+    }
+
+    $used = Produk::where('id_kategori', $id)->exists();
+    if ($used) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Kategori tidak dapat dihapus karena masih digunakan oleh produk'
+        ], 400);
+    }
+
+    try {
+        $category->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Kategori berhasil dihapus'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus kategori',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 
     // GET /products
    public function index(Request $request)
@@ -121,14 +282,13 @@ class ProdukController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_produk' => 'required|string|max:10|unique:produk',
             'nama_produk' => 'required|string|max:100',
             'harga' => 'required|numeric|min:0',
             'id_kategori' => 'required|exists:kategori,id_kategori',
             'stok' => 'required|integer|min:0',
             'tgl_penerimaan' => 'required|date',
             'tgl_kadaluwarsa' => 'nullable|date',
-            'image' => 'nullable|image|max:2048', // 2MB sangat cukup karena sudah di-resize klien
+            'image' => 'nullable|image|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -145,13 +305,21 @@ class ProdukController extends Controller
             $imageName = null;
             if ($request->hasFile('image')) {
                 $file = $request->file('image');
-                // Penamaan file sesuai nama produk (slug) seperti di Command
                 $imageName = Str::slug($request->nama_produk) . '_' . time() . '.jpg';
                 $file->move(public_path('storage/products'), $imageName);
             }
-
+            
+            // Generate new sequential ID like P001, P002
+            $lastProduct = Produk::orderBy('id_produk', 'desc')->first();
+            $nextIdNumber = 1;
+            if ($lastProduct) {
+                $lastIdNumber = (int) substr($lastProduct->id_produk, 1);
+                $nextIdNumber = $lastIdNumber + 1;
+            }
+            $newId = 'P' . str_pad($nextIdNumber, 3, '0', STR_PAD_LEFT);
+            
             $product = Produk::create([
-                'id_produk' => $request->id_produk,
+                'id_produk' => $newId,
                 'nama_produk' => $request->nama_produk,
                 'harga' => $request->harga,
                 'status' => $request->status ? 1 : 0,

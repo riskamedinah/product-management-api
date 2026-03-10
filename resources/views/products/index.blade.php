@@ -3,109 +3,87 @@
 @section('title', 'Daftar Produk')
 
 @section('content')
+<div class="flex items-start gap-4">
+    {{-- Tombol Hamburger dengan latar putih dan shadow --}}
+    <button id="hamburgerBtn" class="bg-white shadow rounded-lg p-3 hover:bg-gray-50 focus:outline-none transition">
+        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+
 <div class="bg-white shadow rounded-lg p-6">
     <h1 class="text-2xl font-semibold text-gray-800 mb-6">Daftar Produk</h1>
 
-<div class="bg-white border rounded-lg p-5 mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">
-                Pencarian
-            </label>
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+        
+        <div class="md:col-span-8">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Cari Produk</label>
             <input id="searchInput" type="text" placeholder="ID / Nama Produk"
-                class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">
-                Kategori
-            </label>
-             <select id="kategoriFilter"
-        class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-        <option value="">Semua Kategori</option>
-    </select>
+        <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Kategori</label>
+            <select id="kategoriFilter" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 outline-none">
+                <option value="">Semua Kategori</option>
+            </select>
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">
-                Status
-            </label>
-            <select id="statusFilter"
-                class="w-full px-3 py-2 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">Semua</option>
+        <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Status</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+                <option value="">Semua Status</option>
                 <option value="1">Aktif</option>
                 <option value="0">Nonaktif</option>
             </select>
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">
-                Stok Minimum
-            </label>
-            <input id="stokMin" type="number" placeholder="0"
-                class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Rentang Stok</label>
+            <div class="grid grid-cols-2 gap-2">
+                <input id="stokMin" type="number" placeholder="Min" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+                <input id="stokMax" type="number" placeholder="Max" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+            </div>
         </div>
 
-        <div>
-            <label class="block text-sm font-medium text-gray-600 mb-1">
-                Stok Maksimum
-            </label>
-            <input id="stokMax" type="number" placeholder="100"
-                class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+        <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Penerimaan</label>
+            <input id="penerimaanFilter" type="month" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
         </div>
 
-<div>
-    <label class="block text-sm font-medium text-gray-600 mb-1">
-        Tanggal Penerimaan (Bulan-Tahun)
-    </label>
-    <input id="penerimaanFilter" type="month" 
-        class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-</div>
+        <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Kadaluwarsa</label>
+            <input id="kadaluwarsaFilter" type="month" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none">
+        </div>
 
-<div>
-    <label class="block text-sm font-medium text-gray-600 mb-1">
-        Tanggal Kadaluwarsa (Bulan-Tahun)
-    </label>
-    <input id="kadaluwarsaFilter" type="month"
-        class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-</div>
+        <div class="md:col-span-6 bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Urutan Tampilan</label>
+            <div class="grid grid-cols-3 gap-2">
+                <select id="sortField" class="col-span-2 px-3 py-2 border border-gray-300 rounded-lg outline-none">
+                    <option value="id_produk">ID Produk</option>
+                    <option value="nama_produk">Nama Produk</option>
+                    <option value="harga">Harga</option>
+                    <option value="stok">Stok</option>
+                </select>
+                <select id="sortDirection" class="col-span-1 px-3 py-2 border border-gray-300 rounded-lg outline-none">
+                    <option value="asc">Naik ↑</option>
+                    <option value="desc">Turun ↓</option>
+                </select>
+            </div>
+        </div>
 
-        <div class="flex items-end gap-2">
+        <div class="md:col-span-6 flex items-end gap-3">
+            <button id="resetFilter"
+                class="w-1/3 px-4 py-2.5 bg-gray-100 text-gray-600 font-semibold rounded-lg hover:bg-gray-200 transition">
+                Reset
+            </button>
             <button id="applyFilter"
-                class="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                class="w-2/3 px-4 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-lg shadow-blue-100 transition">
                 Terapkan Filter
             </button>
-        <button id="resetFilter"
-            class="w-full px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition">
-            Reset Filter
-        </button>
         </div>
 
-    </div>
-</div>
-
-<div class="bg-gray-50 border rounded-lg p-4 mb-6">
-    <div class="flex flex-wrap items-center gap-4">
-        <span class="text-sm font-medium text-gray-600">Urutkan:</span>
-
-        <select id="sortField"
-            class="px-4 py-2 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="id_produk">ID Produk</option>
-            <option value="nama_produk">Nama Produk</option>
-            <option value="harga">Harga</option>
-            <option value="nama_kategori">Kategori</option>
-            <option value="stok">Stok</option>
-            <option value="status">Status</option>
-            <option value="tgl_penerimaan">Tanggal Penerimaan</option>
-            <option value="tgl_kadaluwarsa">Tanggal Kadaluwarsa</option>
-        </select>
-
-        <select id="sortDirection"
-            class="px-4 py-2 border rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="asc">Naik</option>
-            <option value="desc">Turun</option>
-        </select>
     </div>
 </div>
 
@@ -177,12 +155,21 @@
         </td>
     </tr>
 </template>
+   </div>
+
+ <div id="loading" class="hidden text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p class="mt-2 text-gray-500">Memuat data produk...</p>
+            </div>
+            <div id="error" class="hidden text-center py-10 text-red-600 bg-red-50 rounded-lg"></div>
 
 <div id="pagination" class="mt-6 flex justify-end gap-1"></div>
 
 <template id="paginationButton">
     <button class="px-3 py-1 border rounded transition"></button>
 </template>
+</div>
+</div>
 </div>
 
 <!-- Modal Edit Produk -->
@@ -303,13 +290,7 @@
             <div class="p-6">
                 <form id="addProductForm">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ID Produk *</label>
-                                <input type="text" name="id_produk" required maxlength="10"
-                                    class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            
+                        <div>                            
                             <div class="mb-4">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Produk *</label>
                                 <input type="text" name="nama_produk" required maxlength="100"
@@ -383,6 +364,7 @@
         </div>
     </div>
 </div>
+</div>
 
 <script src="/js/products.js"></script>
 
@@ -421,4 +403,6 @@
         background-color: #f9fafb;
     }
 </style>
+
+@include('partials.sidebar')
 @endsection

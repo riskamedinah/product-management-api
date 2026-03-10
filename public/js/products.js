@@ -1,10 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initHamburgerMenu();
     loadProducts();
     loadCategories();
     initEventListeners();
 });
 
 let currentEditId = null;
+
+function initHamburgerMenu() {
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const closeSidebar = document.getElementById('closeSidebar');
+
+    if (!hamburgerBtn || !sidebar || !overlay || !closeSidebar) {
+        console.warn('Elemen sidebar tidak ditemukan');
+        return;
+    }
+
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+    }
+
+    function closeSidebarFunc() {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+
+    hamburgerBtn.addEventListener('click', openSidebar);
+    closeSidebar.addEventListener('click', closeSidebarFunc);
+    overlay.addEventListener('click', closeSidebarFunc);
+}
 
 function initEventListeners() {
     const listen = (id, event, callback) => {
@@ -36,41 +63,21 @@ function initEventListeners() {
             if (e.target.id === 'addProductModal') closeAddModal();
         });
     }
-}
 
-function openAddModal() {
-    const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.remove('hidden');
-    
-    const tglInput = document.querySelector('input[name="tgl_penerimaan"]');
-    if (tglInput) {
-        tglInput.value = new Date().toISOString().split('T')[0];
-    }
-    loadCategories();
-}
-
-function closeAddModal() {
-    const modal = document.getElementById('addProductModal');
-    if (modal) modal.classList.add('hidden');
-    resetAddForm();
-}
-
-function resetAddForm() {
-    const form = document.getElementById('addProductForm');
-    if (form) form.reset();
-
-    const errorDiv = document.getElementById('formErrors');
-    if (errorDiv) {
-        errorDiv.classList.add('hidden');
-        errorDiv.innerHTML = '';
-    }
-
-    const statusRadio = document.querySelector('input[name="status"]');
-    if (statusRadio) statusRadio.checked = true;
-
-    const tglInput = document.querySelector('input[name="tgl_penerimaan"]');
-    if (tglInput) {
-        tglInput.value = new Date().toISOString().split('T')[0];
+    // Preview gambar edit
+    const editImageInput = document.getElementById('edit_image_input');
+    if (editImageInput) {
+        editImageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('edit_preview_image');
+                    if (preview) preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 }
 
@@ -105,6 +112,7 @@ async function loadCategories() {
 }
 
 async function loadProducts(page = 1) {
+    hideError();
     const getVal = (id) => document.getElementById(id)?.value || '';
     
     const params = new URLSearchParams({
@@ -127,9 +135,12 @@ async function loadProducts(page = 1) {
         if (json.success) {
             renderTable(json.data.data);
             renderPagination(json.data);
+        } else {
+            showError(json.message || 'Gagal memuat data produk');
         }
     } catch (error) {
         console.error(error);
+        showError('Terjadi kesalahan koneksi saat memuat produk.');
     }
 }
 
@@ -230,6 +241,13 @@ function renderTable(products) {
     
     tbody.innerHTML = '';
     
+    if (products.length === 0) {
+        // Dapatkan jumlah kolom dari template header jika ada, atau gunakan angka statis
+        const colCount = document.querySelector('#productTable thead tr')?.childElementCount || 10;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-10 text-gray-500">Tidak ada produk ditemukan.</td></tr>`;
+        return;
+    }
+
     products.forEach(p => {
         const row = template.content.cloneNode(true);
         const stokValue = p.stok?.stok || 0;
@@ -511,6 +529,26 @@ function closeEditModal() {
     document.getElementById('editProductForm').reset();
 }
 
+function openAddModal() {
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.getElementById('addProductForm')?.reset();
+        const errorDiv = document.getElementById('formErrors');
+        if (errorDiv) {
+            errorDiv.classList.add('hidden');
+            errorDiv.innerHTML = '';
+        }
+    }
+}
+
+function closeAddModal() {
+    const modal = document.getElementById('addProductModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
 const editImageInput = document.getElementById('edit_image_input');
 if (editImageInput) {
     editImageInput.addEventListener('change', function() {
@@ -523,4 +561,18 @@ if (editImageInput) {
             reader.readAsDataURL(file);
         }
     });
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('error');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+        document.getElementById('productTable').innerHTML = ''; // Kosongkan tabel jika error
+    }
+}
+
+function hideError() {
+    const errorDiv = document.getElementById('error');
+    if (errorDiv) errorDiv.classList.add('hidden');
 }

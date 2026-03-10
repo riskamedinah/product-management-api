@@ -11,4 +11,10 @@ Route::prefix('products')->group(function () {
     Route::delete('/{id}', [ProdukController::class, 'destroy']);
 });
 
-Route::get('/categories', [ProdukController::class, 'getCategories']);
+Route::prefix('categories')->group(function () {
+    Route::get('/', [ProdukController::class, 'getCategories']);
+    Route::post('/', [ProdukController::class, 'storeCategory']);
+    Route::get('/{id}', [ProdukController::class, 'getCategory']);
+    Route::put('/{id}', [ProdukController::class, 'updateCategory']);
+    Route::delete('/{id}', [ProdukController::class, 'destroyCategory']);
+});

@@ -6,8 +6,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <div class="max-w-7xl mx-auto px-6 py-8">
-        @yield('content')
-    </div>
+  <main class="py-6 px-4 sm:px-6 lg:px-8">
+         @yield('content')
+    </main>
+
 </body>
 </html>
