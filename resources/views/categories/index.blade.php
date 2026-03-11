@@ -35,8 +35,8 @@
                                 <option value="nama_kategori">Nama</option>
                             </select>
                             <select id="sortDirection" class="px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 outline-none">
-                                <option value="asc">↑</option>
-                                <option value="desc">↓</option>
+                                <option value="asc">Naik ↑</option>
+                                <option value="desc">Turun ↓</option>
                             </select>
                         </div>
                     </div>
